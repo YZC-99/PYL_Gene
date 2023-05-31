@@ -20,9 +20,12 @@ class MLPclassifica(pl.LightningModule):
                  weight_decay,
                  dropout=0.2,
                  over_sampling: str = None,
-                 loss_weight: list=[1,1]
+                 loss_weight: list=[1,1],
+                 optimizer: str = 'SGD'
                  ):
         super(MLPclassifica, self).__init__()
+        self.optimizer = optimizer
+
         self.over_sampling = over_sampling
         self.num_classes = num_classes
         self.data_key = data_key
@@ -135,12 +138,14 @@ class MLPclassifica(pl.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List, List]:
         lr = self.learning_rate
-
-        optimizers = [torch.optim.Adam(self.parameters(), lr=lr, betas=(0.9, 0.99), weight_decay=self.weight_decay)]
+        if self.optimizer =='SGD':
+            optimizers = [torch.optim.SGD(self.parameters(),lr=lr, momentum=0.9, weight_decay=self.weight_decay)]
+        elif self.optimizer == 'Adam':
+            optimizers = [torch.optim.Adam(self.parameters(), lr=lr, betas=(0.9, 0.99), weight_decay=self.weight_decay)]
 
         total_epochs = self.trainer.max_epochs
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_epochs)
 
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[0], T_max=total_epochs)
         schedulers = [
             {
                 'scheduler': scheduler,
@@ -148,6 +153,17 @@ class MLPclassifica(pl.LightningModule):
                 'frequency': 1
             }
         ]
+
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizers[0], mode='min', factor=0.1, patience=5, verbose=True)
+        # schedulers = [
+        #     {
+        #         'scheduler': scheduler,
+        #         'monitor': 'val/loss',
+        #         'interval': 'step',  # 调度间隔，可以是 'epoch' 或 'step'
+        #         'reduce_on_plateau': True,  # 标记使用 ReduceLROnPlateau 调度器
+        #         'cooldown': 0  # 验证集指标改善后重新恢复调度器的轮次数
+        #     }
+        # ]
 
         return optimizers, schedulers
 
@@ -178,7 +194,10 @@ class DoubleHeadMLPclassifica(MLPclassifica):
                  weight_decay,
                  dropout=0.2,
                  over_sampling: str = None,
-                 loss_weight: list=[1,1]
+                 loss_weight: list=[1,1],
+                 dna_key: str = 'dna_data',
+                 ppi_key: str = 'ppi_data',
+                 optimizer: str = 'SGD'
                  ):
         super(DoubleHeadMLPclassifica, self).__init__(
             num_classes,
@@ -188,7 +207,10 @@ class DoubleHeadMLPclassifica(MLPclassifica):
             dropout,
             over_sampling,
             loss_weight,
+            optimizer
         )
+        self.dna_key = dna_key
+        self.ppi_key = ppi_key
         self.over_sampling = over_sampling
         self.num_classes = num_classes
         self.data_key = data_key
@@ -224,8 +246,8 @@ class DoubleHeadMLPclassifica(MLPclassifica):
         return logits
 
     def training_step(self, batch: Tuple[Any, Any], batch_idx: int, optimizer_idx: int = 0) -> torch.FloatTensor:
-        dna_x = self.get_input(batch, 'dna_data')
-        ppi_x = self.get_input(batch, 'ppi_data')
+        dna_x = self.get_input(batch, self.dna_key)
+        ppi_x = self.get_input(batch, self.ppi_key)
         y = batch['label']
 
         # if self.over_sampling == 'SOMTE':
@@ -236,13 +258,37 @@ class DoubleHeadMLPclassifica(MLPclassifica):
 
         logits = self(dna_x,ppi_x)
         loss = self.loss(logits, y)
+
+        preds = nn.functional.sigmoid(logits).argmax(1)
+        output = {'y_true': y, 'y_pred': preds, 'loss': loss}
         self.log("train/lr", self.optimizers().param_groups[0]['lr'], prog_bar=True, logger=True, on_epoch=True)
         self.log("train/total_loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
-        return loss
+        return output
+
+    def training_epoch_end(self, outputs: List[Dict[str, Any]]) -> None:
+        y_true = []
+        y_pred = []
+        for output in outputs:
+            y_true.extend(output['y_true'].cpu().numpy().flatten())
+            y_pred.extend(output['y_pred'].cpu().numpy().flatten())
+        if len(np.unique(y_true)) < 2:
+            # 处理只有一个类别的情况
+            self.log("train/auc", 0.0, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
+        else:
+            preci_score = precision_score(y_true, y_pred)
+            acc_score = accuracy_score(y_true, y_pred)
+            auc = roc_auc_score(y_true, y_pred)
+            recall = recall_score(y_true, y_pred)
+            f1 = f1_score(y_true, y_pred)
+            self.log("train/preci_score", preci_score, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
+            self.log("train/acc_score", acc_score, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
+            self.log("train/auc", auc, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
+            self.log("train/recall", recall, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
+            self.log("train/f1", f1, prog_bar=True, logger=True, on_epoch=True, sync_dist=True)
 
     def validation_step(self, batch: Tuple[Any, Any], batch_idx: int) -> Dict:
-        dna_x = self.get_input(batch, 'dna_data')
-        ppi_x = self.get_input(batch, 'ppi_data')
+        dna_x = self.get_input(batch, self.dna_key)
+        ppi_x = self.get_input(batch, self.ppi_key)
         y = batch['label']
         logits = self(dna_x,ppi_x)
 

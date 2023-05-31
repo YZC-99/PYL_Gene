@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 class DNA_PPIBase(Dataset):
-    def __init__(self, label_path, essential_data, nonessential_data,embedding_data):
+    def __init__(self, label_path, essential_data, nonessential_data,embedding_data,features=4545):
         # 读取 ppi.csv 文件
         label_data = pd.read_csv(label_path)
 
@@ -22,6 +22,7 @@ class DNA_PPIBase(Dataset):
         self.essential_data = essential_data
         self.nonessential_data = nonessential_data
         self.embedding_data = embedding_data
+        self.features = features
 
 
     def __len__(self):
@@ -35,9 +36,9 @@ class DNA_PPIBase(Dataset):
         id = self.label_data.iloc[index]['id']
         label = self.label_data.iloc[index]['label']
         if label == 1:
-            dna_feature = self.essential_data.loc[self.essential_data['Gene_name'] == name].iloc[:, -4545:].values
+            dna_feature = self.essential_data.loc[self.essential_data['Gene_name'] == name].iloc[:, -self.features:].values
         else:
-            dna_feature = self.nonessential_data.loc[self.nonessential_data['gene'] == name].iloc[:, -4545:].values
+            dna_feature = self.nonessential_data.loc[self.nonessential_data['gene'] == name].iloc[:, -self.features:].values
 
         if dna_feature.shape[0]== 0:
             dna_feature = np.reshape(dna_feature,(1,-1))
@@ -52,6 +53,7 @@ class DNA_PPIBase(Dataset):
         examples = {
             'name':name,
             'dna_data':dna_data,
+            'dna_data9':dna_data[:9],
             'ppi_data':ppi_data,
             'label':int(label),
         }
@@ -61,12 +63,14 @@ class DNA_PPITrain(DNA_PPIBase):
     def __init__(self,label_path='./data/human/train.csv',
                          essential_data='./data/human/deg_nonan_data_with_feature.csv',
                          nonessential_data='./data/human/ccds_nonan_data_with_feature.csv',
-                         embedding_data='./data/human/0005-emebdding.npy'
+                         embedding_data='./data/human/0005-emebdding.npy',
+                         features=4545,
                          ):
         super().__init__(label_path=label_path,
                          essential_data=essential_data,
                          nonessential_data=nonessential_data,
-                         embedding_data=embedding_data
+                         embedding_data=embedding_data,
+                         features=features
                          )
 
 
@@ -74,12 +78,14 @@ class DNA_PPIEval(DNA_PPIBase):
     def __init__(self,label_path='./data/human/eval.csv',
                          essential_data='./data/human/deg_nonan_data_with_feature.csv',
                          nonessential_data='./data/human/ccds_nonan_data_with_feature.csv',
-                         embedding_data='./data/human/0005-emebdding.npy'
+                         embedding_data='./data/human/0005-emebdding.npy',
+                         features=4545,
                          ):
         super().__init__(label_path=label_path,
                          essential_data=essential_data,
                          nonessential_data=nonessential_data,
-                         embedding_data=embedding_data
+                         embedding_data=embedding_data,
+                         features=features
                          )
 
 # from torch.utils.data import DataLoader

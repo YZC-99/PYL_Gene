@@ -4,13 +4,15 @@ model:
   params:
     num_classes: 2
     data_key: ppi_data
-    dna_in_channels: 4545
-    dna_out_channels: 128
-    ppi_in_channels: 128
-    ppi_out_channels: 128
-    dropout: 0.2
+    dna_in_channels: 9
+    dna_out_channels: 9
+    ppi_in_channels: 64
+    ppi_out_channels: 64
+    dropout: 0.3
     weight_decay: 1e-4
     over_sampling: None
+    dna_key: dna_data9
+    optimizer: Adam
 
 #    loss:
 #      target: torch.nn.CrossEntropyLoss

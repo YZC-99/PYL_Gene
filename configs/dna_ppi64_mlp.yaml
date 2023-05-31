@@ -6,8 +6,8 @@ model:
     data_key: ppi_data
     dna_in_channels: 4545
     dna_out_channels: 128
-    ppi_in_channels: 128
-    ppi_out_channels: 128
+    ppi_in_channels: 64
+    ppi_out_channels: 64
     dropout: 0.2
     weight_decay: 1e-4
     over_sampling: None
