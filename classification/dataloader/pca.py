@@ -33,7 +33,7 @@ ccds_features = ccds_data.iloc[:, -4545:]
 deg_features = deg_data.iloc[:, -4545:]
 
 # 定义降维维度的范围
-n_components_range = range(1, 256)
+n_components_range = range(1, 512)
 
 # 计算每个维度数量对应的累计方差
 explained_variances = []
@@ -47,7 +47,24 @@ plt.plot(n_components_range, explained_variances)
 plt.xlabel('Number of Components')
 plt.ylabel('Explained Variance (%)')
 plt.title('PCA: Explained Variance vs Number of Components')
-plt.show()
+plt.savefig("ccds_pca.png",dpi=500)
+# plt.show()
+
+
+# # 计算每个维度数量对应的累计方差
+explained_variances = []
+for n in n_components_range:
+    pca = PCA(n_components=n)
+    deg_features = pca.fit_transform(deg_features)
+    explained_variances.append(np.sum(pca.explained_variance_ratio_))
+
+# 绘制累计方差与维度数量的关系图
+plt.plot(n_components_range, explained_variances)
+plt.xlabel('Number of Components')
+plt.ylabel('Explained Variance (%)')
+plt.title('PCA: Explained Variance vs Number of Components')
+plt.savefig("deg_pca.png",dpi=500)
+# plt.show()
 
 
 # # 定义降维维度
