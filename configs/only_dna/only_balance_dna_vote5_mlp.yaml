@@ -1,5 +1,5 @@
 model:
-  base_learning_rate: 1e-4
+  base_learning_rate: 1e-3
   target: classification.modules.base.MLPclassifica
   params:
     num_classes: 2
@@ -15,21 +15,19 @@ model:
 dataset:
     target: classification.dataloader.DataModuleFromConfig
     params:
-        batch_size: 128
+        batch_size: 32
         num_workers: 0
         train:
             target: classification.dataloader.dna.DNATrain
             params:
-              label_path: ./data/human/train.csv
+              label_path: ./data/human/train_balance_vote5.csv
               essential_data: ./data/human/deg_dna_with_feature.csv
               nonessential_data: ./data/human/ccds_nonan_data_with_feature.csv
-#              embedding_data: ./data/human/0005-emebdding.npy
 
         validation:
             target: classification.dataloader.dna.DNAEval
             params:
-              label_path: ./data/human/eval.csv
+              label_path: ./data/human/eval_balance_vote5.csv
               essential_data: ./data/human/deg_dna_with_feature.csv
               nonessential_data: ./data/human/ccds_nonan_data_with_feature.csv
-#              embedding_data: ./data/human/0005-emebdding.npy
 

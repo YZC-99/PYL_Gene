@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 class DNABase(Dataset):
-    def __init__(self, label_path, essential_data, nonessential_data):
+    def __init__(self, label_path, essential_data, nonessential_data,features=4545):
         # 读取 ppi.csv 文件
         label_data = pd.read_csv(label_path)
 
@@ -20,6 +20,7 @@ class DNABase(Dataset):
         self.label_data = label_data
         self.essential_data = essential_data
         self.nonessential_data = nonessential_data
+        self.features = features
 
 
     def __len__(self):
@@ -32,9 +33,9 @@ class DNABase(Dataset):
         name = self.label_data.iloc[index]['name']
         label = self.label_data.iloc[index]['label']
         if label == 1:
-            feature = self.essential_data.loc[self.essential_data['Gene_name'] == name].iloc[:, -4545:].values
+            feature = self.essential_data.loc[self.essential_data['Gene_name'] == name].iloc[:, -self.features:].values
         else:
-            feature = self.nonessential_data.loc[self.nonessential_data['gene'] == name].iloc[:, -4545:].values
+            feature = self.nonessential_data.loc[self.nonessential_data['gene'] == name].iloc[:, -self.features:].values
 
         if feature.shape[0]== 0:
             feature = np.reshape(feature,(1,-1))

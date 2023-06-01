@@ -21,7 +21,7 @@ class MLPclassifica(pl.LightningModule):
                  dropout=0.2,
                  over_sampling: str = None,
                  loss_weight: list=[1,1],
-                 optimizer: str = 'SGD'
+                 optimizer: str = 'Adam'
                  ):
         super(MLPclassifica, self).__init__()
         self.optimizer = optimizer

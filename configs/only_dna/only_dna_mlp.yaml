@@ -1,20 +1,16 @@
 model:
   base_learning_rate: 1e-3
-  target: classification.modules.base.DoubleHeadMLPclassifica
+  target: classification.modules.base.MLPclassifica
   params:
     num_classes: 2
-    data_key: ppi_data
-    dna_in_channels: 4545
-    dna_out_channels: 128
-    ppi_in_channels: 128
-    ppi_out_channels: 128
+    data_key: dna_data
+    in_channels: 4545
     dropout: 0.2
     weight_decay: 1e-4
     over_sampling: None
-    loss_weight: [1,6]
 
-#    loss:
-#      target: torch.nn.CrossEntropyLoss
+    loss:
+      target: torch.nn.CrossEntropyLoss
 
 dataset:
     target: classification.dataloader.DataModuleFromConfig
@@ -22,18 +18,16 @@ dataset:
         batch_size: 32
         num_workers: 0
         train:
-            target: classification.dataloader.dna_ppi.DNA_PPITrain
+            target: classification.dataloader.dna.DNATrain
             params:
               label_path: ./data/human/train.csv
               essential_data: ./data/human/deg_dna_with_feature.csv
               nonessential_data: ./data/human/ccds_nonan_data_with_feature.csv
-              embedding_data: ./data/human/0005-emebdding.npy
 
         validation:
-            target: classification.dataloader.dna_ppi.DNA_PPIEval
+            target: classification.dataloader.dna.DNAEval
             params:
               label_path: ./data/human/eval.csv
               essential_data: ./data/human/deg_dna_with_feature.csv
               nonessential_data: ./data/human/ccds_nonan_data_with_feature.csv
-              embedding_data: ./data/human/0005-emebdding.npy
 
