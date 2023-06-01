@@ -55,10 +55,12 @@ class DNATrain(DNABase):
     def __init__(self,label_path='./data/human/train.csv',
                          essential_data='./data/human/deg_nonan_data_with_feature.csv',
                          nonessential_data='./data/human/ccds_nonan_data_with_feature.csv',
+                         features=4545,
                          ):
         super().__init__(label_path=label_path,
                          essential_data=essential_data,
                          nonessential_data=nonessential_data,
+                         features=features
                          )
 
 
@@ -66,10 +68,12 @@ class DNAEval(DNABase):
     def __init__(self,label_path='./data/human/eval.csv',
                          essential_data='./data/human/deg_nonan_data_with_feature.csv',
                          nonessential_data='./data/human/ccds_nonan_data_with_feature.csv',
+                         features=4545,
                          ):
         super().__init__(label_path=label_path,
                          essential_data=essential_data,
                          nonessential_data=nonessential_data,
+                         features=features,
                          )
 
 # from torch.utils.data import DataLoader
