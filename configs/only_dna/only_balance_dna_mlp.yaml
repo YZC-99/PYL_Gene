@@ -18,7 +18,7 @@ dataset:
         train:
             target: classification.dataloader.dna.DNATrain
             params:
-              label_path: ./data/human/train_balacen.csv
+              label_path: ./data/human/train_balance.csv
               essential_data: ./data/human/deg_dna_with_feature.csv
               nonessential_data: ./data/human/ccds_nonan_data_with_feature.csv
 
