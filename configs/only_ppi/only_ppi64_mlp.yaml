@@ -9,9 +9,6 @@ model:
     weight_decay: 1e-4
     over_sampling: None
 
-#    loss:
-#      target: torch.nn.CrossEntropyLoss
-
 dataset:
     target: classification.dataloader.DataModuleFromConfig
     params:

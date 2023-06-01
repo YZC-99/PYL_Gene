@@ -13,8 +13,6 @@ model:
     over_sampling: None
     optimizer: Adam
 
-#    loss:
-#      target: torch.nn.CrossEntropyLoss
 
 dataset:
     target: classification.dataloader.DataModuleFromConfig
